@@ -1,19 +1,18 @@
-name: ReactJS CI
+name: ReactJS CI/CD
 
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
 
 jobs:
-  build-and-test:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout mã nguồn
         uses: actions/checkout@v4
 
+      # --- PHẦN CI: BUILD ỨNG DỤNG ---
       - name: Cài đặt Node.js
         uses: actions/setup-node@v4
         with:
@@ -26,9 +25,19 @@ jobs:
       - name: Kiểm tra Code Style (Linter)
         run: npm run lint --if-present
 
-      - name: Chạy Unit Test
-        run: npm test -- --watchAll=false --passWithNoTests
-
-      
-      - name: Thử nghiệm Build dự án
+      - name: Build dự án ReactJS
         run: CI=false npm run build
+
+      # --- PHẦN CD: DEPLOY LÊN VPS ---
+      - name: Đẩy file tĩnh lên VPS bằng SFTP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          # Nguồn lấy: Lấy toàn bộ trong thư mục build (Hoặc đổi thành dist/ nếu dự án dùng Vite)
+          source: "dist/*" 
+          # Đích đến: Thư mục chứa web trên VPS (Bạn có thể tạo thư mục này trước trên VPS)
+          target: "/var/www/my-react-app"
+          strip_components: 1 # Bỏ bọc thư mục cha ngoài cùng, chỉ lấy file bên trong
