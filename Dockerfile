@@ -12,7 +12,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # 4. Chạy lệnh cài đặt tất cả các thư viện (node_modules) bên trong môi trường Docker
-RUN npm ci
+RUN npm install --legacy-peer-deps
 
 # 5. Copy toàn bộ mã nguồn còn lại của dự án từ máy bạn vào trong Docker
 COPY . .
