@@ -55,7 +55,7 @@ export function Header() {
             value={searchDraft}
             onChange={(event) => setSearchDraft(event.target.value)}
             className="h-9 min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-white/35"
-            placeholder="Tìm kiếm phim..."
+            placeholder="Tìm kiếm phim hay..."
             type="search"
           />
         </form>

@@ -93,7 +93,7 @@ export function HeroBanner({ movies = [], cdnImage }: HeroBannerProps) {
               <span className="relative inline-flex rounded-full h-2 w-2 bg-brand"></span>
             </span>
             <Sparkles className="h-3.5 w-3.5 text-brand" aria-hidden="true" />
-            Phim nổi bật hôm nay
+            Phim nổi bật nè
           </div>
           
           <h1 className="max-w-3xl text-4xl font-black leading-tight text-white drop-shadow-md md:text-6xl lg:text-7xl">
