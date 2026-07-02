@@ -27,18 +27,42 @@ jobs:
           docker push ${{ secrets.DOCKER_USER }}/rophim-client:latest
 
       # 4. Deploy lên VPS
-      - name: SSH Deploy
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          script: |
-            docker pull ${{ secrets.DOCKER_USER }}/rophim-client:latest
+      - name: Deploy (Production)
+  uses: appleboy/ssh-action@v1.0.3
+  with:
+    host: ${{ secrets.SSH_HOST }}
+    username: ${{ secrets.SSH_USER }}
+    key: ${{ secrets.SSH_KEY }}
+    script: |
+      IMAGE=${{ secrets.DOCKER_USER }}/rophim-client
+      TAG=${{ github.sha }}
 
-            docker stop rophim || true
-            docker rm rophim || true
+      echo " Pull image mới"
+      docker pull $IMAGE:$TAG
 
-            docker run -d -p 3000:80 \
-              --name rophim \
-              ${{ secrets.DOCKER_USER }}/rophim-client:latest
+      echo " Chạy container mới (port 3000)"
+      docker run -d -p 3000:80 --name rophim_new $IMAGE:$TAG
+
+      echo " Health check"
+      sleep 5
+      curl -f http://localhost:3000 || (echo "❌ Lỗi container" && docker logs rophim_new && docker rm -f rophim_new && exit 1)
+
+      echo " Stop container cũ"
+      docker stop rophim || true
+      docker rm rophim || true
+
+      echo " Promote container mới"
+      docker rename rophim_new rophim
+
+      echo " Reload nginx"
+      sudo systemctl reload nginx
+
+      echo " Cleanup old images (keep 3)"
+
+      RUNNING_IMAGE=$(docker inspect --format='{{.Config.Image}}' rophim)
+
+      docker images $IMAGE --format "{{.Repository}}:{{.Tag}}" \
+        | grep -v "latest" \
+        | grep -v "$RUNNING_IMAGE" \
+        | tail -n +4 \
+        | xargs -r docker rmi
