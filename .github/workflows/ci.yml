@@ -2,42 +2,43 @@ name: ReactJS CI/CD
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout mã nguồn
+      # 1. Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      # --- PHẦN CI: BUILD ỨNG DỤNG ---
-      - name: Cài đặt Node.js
-        uses: actions/setup-node@v4
+      # 2. Login Docker Hub
+      - name: Login Docker
+        uses: docker/login-action@v3
         with:
-          node-version: '24' 
-          cache: 'npm'
+          username: ${{ secrets.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_PASS }}
 
-      - name: Cài đặt thư viện (Dependencies)
-        run: npm ci
+      # 3. Build & push image
+      - name: Build & Push
+        run: |
+          docker build -t ${{ secrets.DOCKER_USER }}/rophim-client:latest .
+          docker push ${{ secrets.DOCKER_USER }}/rophim-client:latest
 
-      - name: Kiểm tra Code Style (Linter)
-        run: npm run lint --if-present
-
-      - name: Build dự án ReactJS
-        run: CI=false npm run build
-
-      # --- PHẦN CD: DEPLOY LÊN VPS ---
-      - name: Đẩy file tĩnh lên VPS bằng SFTP
-        uses: appleboy/scp-action@v0.1.7
+      # 4. Deploy lên VPS
+      - name: SSH Deploy
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
-          port: ${{ secrets.SSH_PORT || 22 }}
-          # Nguồn lấy: Lấy toàn bộ trong thư mục build (Hoặc đổi thành dist/ nếu dự án dùng Vite)
-          source: "dist/*" 
-          # Đích đến: Thư mục chứa web trên VPS (Bạn có thể tạo thư mục này trước trên VPS)
-          target: "/var/www/my-react-app"
-          strip_components: 1 # Bỏ bọc thư mục cha ngoài cùng, chỉ lấy file bên trong
+          script: |
+            docker pull ${{ secrets.DOCKER_USER }}/rophim-client:latest
+
+            docker stop rophim || true
+            docker rm rophim || true
+
+            docker run -d -p 3000:80 \
+              --name rophim \
+              ${{ secrets.DOCKER_USER }}/rophim-client:latest
