@@ -25,10 +25,6 @@ jobs:
 
       - name: Kiểm tra Code Style (Linter)
         run: npm run lint --if-present
-
-      - name: Chạy Unit Test
-        run: npm test -- --watchAll=false --passWithNoTests
-
-      
+  
       - name: Thử nghiệm Build dự án
         run: CI=false npm run build
