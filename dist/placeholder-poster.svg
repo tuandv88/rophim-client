@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="600" viewBox="0 0 400 600" role="img" aria-label="Poster placeholder">
+  <rect width="400" height="600" fill="#151515"/>
+  <rect x="32" y="32" width="336" height="536" rx="16" fill="#222"/>
+  <circle cx="200" cy="250" r="48" fill="#E50914"/>
+  <path d="M190 224v52l42-26-42-26Z" fill="#fff"/>
+  <text x="200" y="350" text-anchor="middle" fill="#f5f5f5" font-family="Arial, sans-serif" font-size="28" font-weight="700">Rophim</text>
+</svg>

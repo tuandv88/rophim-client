@@ -1,0 +1,41 @@
+name: ReactJS CI
+
+# 1. Điều kiện kích hoạt: Chạy khi có push hoặc PR vào nhánh main
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    # Chạy trên hệ điều hành Ubuntu mới nhất của GitHub
+    runs-on: ubuntu-latest
+
+    steps:
+      # Bước 1: Kéo source code từ GitHub về máy ảo
+      - name: Checkout mã nguồn
+        uses: actions/checkout@v4
+
+      # Bước 2: Thiết lập môi trường Node.js
+      - name: Cài đặt Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Bạn có thể đổi thành phiên bản Node phù hợp với dự án (18, 20, 22...)
+          cache: 'npm'       # Tự động cache node_modules để các lần chạy sau nhanh hơn
+
+      # Bước 3: Cài đặt các thư viện (dependencies)
+      - name: Cài đặt thư viện (Dependencies)
+        run: npm ci          # "npm ci" nhanh và sạch hơn "npm install", chuyên dùng cho CI/CD
+
+      # Bước 4: Kiểm tra lỗi Code Style / Linter (Nếu dự án của bạn có setup ESLint)
+      - name: Kiểm tra Code Style (Linter)
+        run: npm run lint --if-present # Thêm `--if-present` để không bị lỗi nếu dự án chưa có lệnh lint
+
+      # Bước 5: Chạy các bài Test (Nếu dự án của bạn có viết Unit Test)
+      - name: Chạy Unit Test
+        run: npm test -- --watchAll=false # Chạy test 1 lần rồi thoát, không bật chế độ watch
+
+      # Bước 6: Thử nghiệm Build dự án ra thư mục 'build' hoặc 'dist'
+      - name: Thử nghiệm Build dự án
+        run: npm run build
