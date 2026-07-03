@@ -23,8 +23,9 @@ jobs:
       # 3. Build & push image
       - name: Build & Push
         run: |
-          docker build -t ${{ secrets.DOCKER_USER }}/rophim-client:latest .
-          docker push ${{ secrets.DOCKER_USER }}/rophim-client:latest
+          IMAGE=${{ secrets.DOCKER_USER }}/rophim-client:${{ github.sha }}
+          docker build -t $IMAGE .
+          docker push $IMAGE
 
       # 4. Deploy lên VPS
       - name: SSH Deploy
@@ -34,13 +35,13 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            docker pull ${{ secrets.DOCKER_USER }}/rophim-client:latest
+            docker pull ${{ secrets.DOCKER_USER }}/rophim-client:${{ github.sha }}
 
             docker stop rophim || true
             docker rm rophim || true
 
             docker run -d -p 3000:80 \
               --name rophim \
-              ${{ secrets.DOCKER_USER }}/rophim-client:latest
+              ${{ secrets.DOCKER_USER }}/rophim-client:${{ github.sha }}
 
             echo "Done Tuanvp"
